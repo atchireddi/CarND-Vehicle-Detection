@@ -1,10 +1,10 @@
  
 ## **Vehicle Detection Project**
 
-#### ** Objective: **
+#### **Objective:**
 Identify and track vehicles of video stream.
     
-#### ** Pipeline: **    
+#### **Pipeline:**    
 
 The goals / steps of this project are the following:
 
