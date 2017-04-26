@@ -72,10 +72,10 @@ The goals / steps of this project are the following:
 [image5]: ./output_images/ensamble.jpg
 [image6]: ./examples/labels_map.png
 [image7]: ./output_images/ensamble_last.jpg
-[video1]: ./project_video.mp4
+[video1]: ./output.mp4
  
 
-### Histogram of Oriented Gradients (HOG):
+#### Histogram of Oriented Gradients (HOG):
 HOG feature set, reduces the input dimension space for a classifier, while maintaining unique signature.
 For a 64x64 3 channel image, HOG feature set reduces to 1769 with ` 8 pixel per cell`, `2 cells per block` 
 and `9 gradient orientations`. I considered Histogram of Orientaed Gradients as one of feature set for 
@@ -89,23 +89,33 @@ Below images illustrate extracted HOG features for `vehicle` and `non-vehicle` i
 
 I then explored different color spaces and different `skimage.hog()` parameters (`orientations`, `pixels_per_cell`, and `cells_per_block`).  I grabbed random images from each of the two classes and displayed them to get a feel for what the `skimage.hog()` output looks like.
 
-Here is an example using the `YCrCb` color space and HOG parameters of `orientations=8`, `pixels_per_cell=(8, 8)` and `cells_per_block=(2, 2)`:
+Here is an example using the `YCrCb` color space and HOG parameters of `orientations=9`, `pixels_per_cell=(8, 8)` and `cells_per_block=(2, 2)`:
 
 
 ![alt text][image2]
 
-####2. Explain how you settled on your final choice of HOG parameters.
 
-I tried various combinations of parameters and...
+#### 2. Choice of HOG parameters.
+
+Experimenting with combination of paramerters, `orientation over range 4-12` , `pixel_per_cell over 4,8,12`, and `cells_per_block  either 2, 4`. I observe, at higher resolution, improvement of accuracy is not significanlty better though there's hit
+on compute time. Finally I choose to stick with optimal parameters.
+  -- `orientations = 9`
+  -- `pixel per cell = 8`
+  -- `cells per block = 2`
+
+
 
 #### 3. **Classifier:**
+
 I trained `linear SVM` classifier with combination of `HOG features` and color features from `YCrCb` color space. After
 a bunch of trails, `YCrCb` color space characteristics appears to have linearly seperable features for cars & non-cars.
 
 KITTI vehicle and non-vehicle datasets were train the classifier. since KITTI data is time series, for better optimization
 data was shuffled and split into train and test sets. `extract_features()` function in `vehicleDetection.ipynb` file has code implementation for feature extraction. `StandarScaler()` from `sklearn.preprocessing` was used for feature normalization, to avoid feature biasing. 
 
-### **Sliding Window Search:**
+
+
+#### **Sliding Window Search:**
 
 I performed a sliding window search for vehicle detection. since, the bottom half of the image is where most likely to find
 a vechile, I limit my search region only to the bottom half of the image. To deal with far and near sight vehicles, I performed
@@ -116,19 +126,20 @@ below is the image showing search windows.
 
 ![alt text][image3]
 
-####2. Show some examples of test images to demonstrate how your pipeline is working.  What did you do to optimize the performance of your classifier?
 
-Ultimately I searched on two scales using YCrCb 3-channel HOG features plus spatially binned color and histograms of color in the feature vector, which provided a nice result.  Here are some example images:
+
+#### **Pipeline performance:**  
+
+Below are sample output images that demonstrate pipeline performance on test_video. Ultimately I searched on multiscale
+windows using combination of YCrCb 3-channel HOG features, histogram of colors and spatial binning of color as feature
+vectors.
 
 ![alt text][image4]
----
 
-### Video Implementation
-
-Here's a [link to my video result](./output.mp4)
 
 
 #### **False positives:**
+
 Though above mentioned combination of HOG, histogram of color and spatially binned color features does really well on identifying
 vehicles, I observe, there still false regions reported as vehicles. I adopted threshold technique to filter these false positivies.
 
@@ -148,7 +159,11 @@ Here's an example result showing the heatmap from a series of frames of video, t
 
 
 
----
+### **Video Implementation**
+
+Here's a [link to my video result](./output.mp4)
+
+
 
 ### **Discussion:**
 
