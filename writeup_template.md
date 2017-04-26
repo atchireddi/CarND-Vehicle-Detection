@@ -71,7 +71,7 @@ The goals / steps of this project are the following:
 [image4]: ./output_images/sampe_output.jpg
 [image5]: ./output_images/ensamble.jpg
 [image6]: ./examples/labels_map.png
-[image7]: ./examples/output_bboxes.png
+[image7]: ./output_images/ensamble_last.jpg
 [video1]: ./project_video.mp4
  
 
@@ -142,9 +142,7 @@ Here's an example result showing the heatmap from a series of frames of video, t
 
 ![alt text][image5]
 
-### Here is the output of `scipy.ndimage.measurements.label()` on the integrated heatmap from all six frames:
-![alt text][image6]
-
+ 
 ### Here the resulting bounding boxes are drawn onto the last frame in the series:
 ![alt text][image7]
 
