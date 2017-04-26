@@ -2,9 +2,58 @@
 ## **Vehicle Detection Project**
 
 #### **Objective:**
-Identify and track vehicles of video stream.
+Identify and track vehicles of video stream. Its very important for an autonomous vehicle to identify/track
+other vehicles/object of the environment. Having said that, this project is extensively focused on identifying cars
+on the road. I will walk you through my pipeline for vehicle identification.
     
 #### **Pipeline:**    
+
+Below is an overview of vehicle detection pipeline. Description of each step follows.
+Pipeline relies on  combination of HOG features, color spaces and spatial binning over a set of window sizes
+for vehicle detection. A pre-trained SVM classifer was choosen for object classification task.
+False positives were excluded through 6 frame ensamble.
+
+```
+def process_image(image):    
+    # Try different window sizes
+    windows = []
+    windows += slide_window(image, x_start_stop=[None, None], y_start_stop=[350, 500], 
+                        xy_window=(96, 64), xy_overlap=(0.5, 0.5))
+    windows += slide_window(image, x_start_stop=[None, None], y_start_stop=[350, 500], 
+                        xy_window=(96, 96), xy_overlap=(0.5, 0.5))
+    windows += slide_window(image, x_start_stop=[None, None], y_start_stop=[350, 500], 
+                        xy_window=(128, 96), xy_overlap=(0.5, 0.5))
+    windows += slide_window(image, x_start_stop=[None, None], y_start_stop=[400, 600], 
+                        xy_window=(192, 128), xy_overlap=(0.5, 0.5))
+    
+    hot_windows = search_windows(image, windows, svc, X_scaler, 
+                             color_space=color_space, 
+                             spatial_size=spatial_size, 
+                             hist_bins=hist_bins, 
+                             orient=orient, 
+                             pix_per_cell=pix_per_cell, 
+                             cell_per_block=cell_per_block, 
+                             hog_channel=hog_channel, 
+                             spatial_feat=spatial_feat, 
+                             hist_feat=hist_feat, 
+                             hog_feat=hog_feat)                       
+
+    # back-up hot windows over last 6 images
+    if cnt == 1:
+        for i in np.arange(6):
+            buffer.append(hot_windows)
+    
+    # update buffer
+    buffer.pop(0)
+    buffer.append(hot_windows)
+    
+    window_img = mark_cars(image, [item for i in buffer for item in i])
+    
+    
+    # Return image
+    return window_img
+    
+```
 
 The goals / steps of this project are the following:
 
@@ -24,24 +73,17 @@ The goals / steps of this project are the following:
 [image6]: ./examples/labels_map.png
 [image7]: ./examples/output_bboxes.png
 [video1]: ./project_video.mp4
+ 
 
-## [Rubric](https://review.udacity.com/#!/rubrics/513/view) Points
-###Here I will consider the rubric points individually and describe how I addressed each point in my implementation.  
+### Histogram of Oriented Gradients (HOG):
+HOG feature set, reduces the input dimension space for a classifier, while maintaining unique signature.
+For a 64x64 3 channel image, HOG feature set reduces to 1769 with ` 8 pixel per cell`, `2 cells per block` 
+and `9 gradient orientations`. I considered Histogram of Orientaed Gradients as one of feature set for 
+vehicle/non-vehicle classification. ` hog()` funciton from `skimage.feature` was used to extract HOG features. 
 
----
-###Writeup / README
+Code for HOG feature extraction can be found as `get_hog_features()` function in `vehicleDetection.ipynb` file.
 
-####1. Provide a Writeup / README that includes all the rubric points and how you addressed each one.  You can submit your writeup as markdown or pdf.  [Here](https://github.com/udacity/CarND-Vehicle-Detection/blob/master/writeup_template.md) is a template writeup for this project you can use as a guide and a starting point.  
-
-You're reading it!
-
-###Histogram of Oriented Gradients (HOG)
-
-####1. Explain how (and identify where in your code) you extracted HOG features from the training images.
-
-The code for this step is contained in the first code cell of the IPython notebook (or in lines # through # of the file called `some_file.py`).  
-
-I started by reading in all the `vehicle` and `non-vehicle` images.  Here is an example of one of each of the `vehicle` and `non-vehicle` classes:
+Below images illustrate extracted HOG features for `vehicle` and `non-vehicle` images.
 
 ![alt text][image1]
 
@@ -56,9 +98,12 @@ Here is an example using the `YCrCb` color space and HOG parameters of `orientat
 
 I tried various combinations of parameters and...
 
-####3. Describe how (and identify where in your code) you trained a classifier using your selected HOG features (and color features if you used them).
+#### 3. **Classifier:**
+I trained `linear SVM` classifier with combination of `HOG features` and color features from `YCrCb` color space. After
+a bunch of trails, `YCrCb` color space characteristics appears to have linearly seperable features for cars & non-cars.
 
-I trained a linear SVM using...
+KITTI vehicle and non-vehicle datasets were train the classifier. since KITTI data is time series, for better optimization
+data was shuffled and split into train and test sets. `extract_features()` function in `vehicleDetection.ipynb` file has code implementation for feature extraction. `StandarScaler()` from `sklearn.preprocessing` was used for feature normalization, to avoid feature biasing. 
 
 ###Sliding Window Search
 
@@ -77,13 +122,16 @@ Ultimately I searched on two scales using YCrCb 3-channel HOG features plus spat
 
 ### Video Implementation
 
-####1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (somewhat wobbly or unstable bounding boxes are ok as long as you are identifying the vehicles most of the time with minimal false positives.)
-Here's a [link to my video result](./project_video.mp4)
+Here's a [link to my video result](./output.mp4)
 
 
-####2. Describe how (and identify where in your code) you implemented some kind of filter for false positives and some method for combining overlapping bounding boxes.
+#### **False positives:**
+Though above mentioned combination of HOG, histogram of color and spatially binned color features does really well on identifying
+vehicles, I observe, there still false regions reported as vehicles. I adopted threshold technique to filter these false positivies.
 
-I recorded the positions of positive detections in each frame of the video.  From the positive detections I created a heatmap and then thresholded that map to identify vehicle positions.  I then used `scipy.ndimage.measurements.label()` to identify individual blobs in the heatmap.  I then assumed each blob corresponded to a vehicle.  I constructed bounding boxes to cover the area of each blob detected.  
+I created a heatmap of all positive detections, I took an ensamble of positive detections from last 6 frames for heat map creation. Applied a threshold of 6, to identify true positive detections.
+
+I then used `scipy.ndimage.measurements.label()` to identify individual blobs in the heatmap. assumed each blob corresponded to a vehicle.  A bounding boxe was created to cover the area of each blob detected.  
 
 Here's an example result showing the heatmap from a series of frames of video, the result of `scipy.ndimage.measurements.label()` and the bounding boxes then overlaid on the last frame of video:
 
