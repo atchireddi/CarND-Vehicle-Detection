@@ -105,11 +105,14 @@ a bunch of trails, `YCrCb` color space characteristics appears to have linearly 
 KITTI vehicle and non-vehicle datasets were train the classifier. since KITTI data is time series, for better optimization
 data was shuffled and split into train and test sets. `extract_features()` function in `vehicleDetection.ipynb` file has code implementation for feature extraction. `StandarScaler()` from `sklearn.preprocessing` was used for feature normalization, to avoid feature biasing. 
 
-###Sliding Window Search
+### **Sliding Window Search:**
 
-####1. Describe how (and identify where in your code) you implemented a sliding window search.  How did you decide what scales to search and how much to overlap windows?
+I performed a sliding window search for vehicle detection. since, the bottom half of the image is where most likely to find
+a vechile, I limit my search region only to the bottom half of the image. To deal with far and near sight vehicles, I performed
+multiple searches with different window sizes.
 
-I decided to search random window positions at random scales all over the image and came up with this (ok just kidding I didn't actually ;):
+`process_image()` function in `vehicleDetection.ipynb` has implementation of different window sizes being considered.
+below is the image showing search windows.
 
 ![alt text][image3]
 
@@ -149,9 +152,8 @@ Here's an example result showing the heatmap from a series of frames of video, t
 
 ---
 
-###Discussion
+### **Discussion:**
 
-####1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
-
-Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.  
+My pipeline does pretty well detecting near vehicles, its sluggish on farsight vehicle detection. Though the classifier does
+perform really well on validation set, it still has to identify all vechicles for each frame. I would think of additional training data to make my classifier more robust.
 
