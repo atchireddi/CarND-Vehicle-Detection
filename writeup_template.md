@@ -1,6 +1,11 @@
  
 ## **Vehicle Detection Project**
 
+#### ** Objective: **
+Identify and track vehicles of video stream.
+    
+#### ** Pipeline: **    
+
 The goals / steps of this project are the following:
 
 * Perform a Histogram of Oriented Gradients (HOG) feature extraction on a labeled training set of images and train a classifier Linear SVM classifier
